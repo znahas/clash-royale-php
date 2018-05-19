@@ -153,7 +153,7 @@ class CRClient
         $options = [
           "on_stats"=>function (TransferStats $stats) use (&$con_stats)
           {
-            d($stats,$stats->getEffectiveUri());
+//            d($stats,$stats->getEffectiveUri());
             if ($stats->hasResponse()) {
               $con_stats = $stats->getHandlerStats();
             }

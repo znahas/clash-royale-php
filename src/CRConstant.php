@@ -22,6 +22,7 @@ use CR\Exceptions\CRSDKException;
 class CRConstant
 {
   const BASE_URL = "https://cr-api.github.io/cr-api-data/json/{endpoint}.json";
+//  const BASE_URL = "https://api.royaleapi.com/{endpoint}";
   static protected $file_cache = "";
   static protected $max_cache_age = 3600;
 

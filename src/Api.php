@@ -321,7 +321,7 @@ class Api
      * @param  array          $clan       Array with the tag of the clans
      * @param  array          $keys            Array with the exact parameters to request
      * @param  array          $exclude         Array with the exact parameters to exclude in the request
-     * @return Clan[]||Clan               Array of Clan Objects if given more than one profile, else return one Clan Object
+     * @return Clan[]|Clan               Array of Clan Objects if given more than one profile, else return one Clan Object
      */
     public function getClan(array $clan, array $keys = [], array $exclude = [])
     {
@@ -520,39 +520,33 @@ class Api
      * @param  string $endpoint [description]
      * @param  array $params [description]
      * @param  array $querys [description]
-     * @return CRResponse             [description]
+     * @param bool $saveCache
+     * @return CRResponse [description]
+     * @throws CRResponseException
      */
 
-    public function postNew($endpoint, array $params = [], array $querys = [], $saveCache = true)
+    protected function postNew($endpoint, array $params = [], array $querys = [], $saveCache = true)
     {
-        $base_file = str_replace(["/:tag/", "/:tag", "/", ":tag"], "-", substr($endpoint, 1));
-        $base_file = (substr($base_file, -1) !== "-") ? $base_file . "-" : $base_file;
 
-        $response             = [];
-        $extension            = md5(json_encode($querys));
+        $params = array_filter($params, function ($var) {
+            return !is_null($var);
+        });
 
-        foreach ($params as $key => $value) {
-            $file_cache = $base_file . $value . "." . $extension;
-            $condition  = ($this->ping()) ? ["maxage" => $this->max_cache_age] : [];
+        $response = $this->checkCache($endpoint, $params, $querys);
 
-            if (CRCache::exists($file_cache, $condition)) {
-                $response[] = json_decode(CRCache::get($file_cache), true);
-                unset($params[$key]);
-            }
-        }
-        $params = array_values($params);
+        if ((empty($response) && empty($params)) || !empty($params)) {
 
-        if($params) {
             $request = new CRRequest(
                 $this->getAuthToken(),
                 $endpoint,
                 $params,
                 $querys,
                 false
-                ,5 * 60
+                , 5 * 60
             );
 
-            $this->lastResponse = $res = $this->client->sendRequest($request);
+            $this->last_response = $res = $this->client->sendRequest($request);
+
 
             if ($res->isError()) {
                 throw new CRResponseException($res);
@@ -564,26 +558,11 @@ class Api
             if (isset($res->getHeaders()['x-ratelimit-remaining'])) {
                 $this->remaining = $res->getHeaders()['x-ratelimit-remaining'][0];
             }
-
-//            if (CRUtils::isAssoc($res->getDecodedBody())) {
-            if (count($params) == 1) {
-                $file_cache =  $base_file . $params[0] . "." . $extension;
-                $response[] = $res->getDecodedBody();
-            } else {
-                foreach ($res->getDecodedBody() as $key => $resp) {
-                    $response[] = $resp;
-
-                    if ($saveCache) {
-//                        d($key, $resp, $params);
-
-                        $file_cache = $base_file . $params[$key] . "." . $extension;
-                        CRCache::write($file_cache, json_encode($resp));
-                    }
-                }
-            }
-
+            $this->saveCache($res->getDecodedBody(), $response);
         }
+
         return (count($response) === 1) ? $response[0] : $response;
+
     }
 
 
@@ -591,6 +570,7 @@ class Api
      * @param array $player
      * @param array $keys
      * @param array $exclude
+     * @param bool $useCache
      * @return Battle|Battle[]
      */
     public function getPlayerBattlesNew(array $player, array $keys = [], array $exclude = [], $useCache = true)

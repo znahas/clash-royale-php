@@ -598,9 +598,8 @@ class Api
     }
 
 
-    public function getConstants(array $keys = [], array $exclude = [])
+    public function getConstants(array $constants, array $keys = [], array $exclude = [])
     {
-        $constants = [];
         $querys    = [];
 
         if (!empty($keys)) {
@@ -609,7 +608,7 @@ class Api
         if (!empty($exclude)) {
             $querys["exclude"] = $exclude;
         }
-        $response = $this->post("/constants", array(), $querys);
+        $response = $this->post("/constants", $constants, $querys);
 
 //        return json_decode($response, true);
         return $response;

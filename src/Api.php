@@ -417,7 +417,7 @@ class Api
      * @param  array               $clan           Array with the tag of the clans
      * @param  array               $keys           Array with the exact parameters to request
      * @param  array               $exclude        Array with the exact parameters to exclude in the request
-     * @return ClanWar[]                           Array of ClanWar Objects if given more than one profile, else return one ClanWar Object
+     * @return ClanWar[]|ClanWar                           Array of ClanWar Objects if given more than one profile, else return one ClanWar Object
      */
     public function getClanWarLog(array $clan, array $keys = [], array $exclude = [])
     {

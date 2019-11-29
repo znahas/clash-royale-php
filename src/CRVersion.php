@@ -99,6 +99,7 @@
 
             if (!CRCache::exists("checkVersion", ["maxage" => 60])) {
                 CRCache::write("checkVersion", "1");
+/*
                 if ($packagist = self::checkPackagist()) {
                     $packagist =
                         collect(json_decode($packagist, true)['packages']['firegore2/clash-royale-php'])->reject(
@@ -122,6 +123,7 @@
                         echo CRUtils::markdownToHTML($alert);
                     }
                 }
+                */
             }
 
 

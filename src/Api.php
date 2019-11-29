@@ -1,40 +1,71 @@
 <?php
-/**************************************************************************************************************************************************************************************************************************************************************
- *                                                                                                                                                                                                                                                            *
- * Copyright (c) 2018 by Firegore (https://firegore.es) (git:firegore2).                                                                                                                                                                                      *
- * This file is part of clash-royale-php.                                                                                                                                                                                                                     *
- *                                                                                                                                                                                                                                                            *
- * clash-royale-php is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. *
- * clash-royale-php is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                                                                    *
- * See the GNU Affero General Public License for more details.                                                                                                                                                                                                *
- * You should have received a copy of the GNU General Public License along with clash-royale-php.                                                                                                                                                             *
- * If not, see <http://www.gnu.org/licenses/>.                                                                                                                                                                                                                *
- *                                                                                                                                                                                                                                                            *
- **************************************************************************************************************************************************************************************************************************************************************/
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ ~                                                                                                                                                                                                                                                          ~
+ ~ Copyright (c) 2018 by firegore (https://firegore.es) (git:firegore2)                                                                                                                                                                                     ~
+ ~ This file is part of clash-royale-php.                                                                                                                                                                                                                   ~
+ ~                                                                                                                                                                                                                                                          ~
+ ~ clash-royale-php is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ ~ clash-royale-php is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                                                                  ~
+ ~ See the GNU Affero General Public License for more details.                                                                                                                                                                                              ~
+ ~ You should have received a copy of the GNU General Public License along with clash-royale-php.                                                                                                                                                           ~
+ ~ If not, see <http://www.gnu.org/licenses/> 2018.06.01                                                                                                                                                                                                    ~
+ ~                                                                                                                                                                                                                                                          ~
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 namespace CR;
 
 use CR\CRClient;
 use CR\CRRequest;
+use CR\Objects\Constants;
+use CR\Objects\Deck;
+use CR\Objects\History;
+use CR\Objects\Status;
+use CR\Objects\Tournament;
+use CR\Objects\Tracking;
 use CR\Traits\CacheTrait;
-
 use CR\Objects\Battle;
-use CR\Objects\Helath;
+use CR\Objects\Health;
 use CR\Objects\ClanWar;
 use CR\Objects\Endpoint;
 use CR\Objects\AuthStats;
-use CR\Objects\ChestCycle;
+use CR\Objects\PlayerChest;
 use CR\Exceptions\CRSDKException;
 use CR\Exceptions\CRResponseException;
 use CR\HttpClients\HttpClientInterface;
 use CR\Objects\Clan;
 use CR\Objects\Player;
-use CR\Objects\ClanSearch;
 use CR\Objects\UnknownObject;
-use CR\CRCache;
 
 /**
- * [Api description]
+ * Api
+ * @method  Player|Player[]             getPlayer([ ],[ ],[ ])
+ * @method  Battle                      getPlayerBattle([ ],[ ],[ ])
+ * @method  PlayerChest                 getPlayerChest([ ],[ ],[ ])
+ * @method  Clan[]                      getClanSearch(string,int,int,int)
+ * @method  Tracking                    getClanTracking([],[],[])
+ * @method  Clan                        getClan([ ],[ ],[ ])
+ * @method  Battle                      getClanBattle([ ],[ ],[ ],string)
+ * @method  ClanWar                     getClanWar([ ],[ ],[ ])
+ * @method  ClanWar                     getClanWarlog([ ],[ ],[ ])
+ * @method  History                     getClanHistory([],[],[])
+ * @method  History                     getClanHistoryWeekly([],[],[])
+ * @method  UnknownObject               getClanTrack([],[],[])
+ * @method  Tournament                  getTournamentOpen([],[],[])
+ * @method  Tournament                  getTournamentKnown([],[],[])
+ * @method  Tournament                  getTournamentSearch([],[],[])
+ * @method  Tournament                  getTournament([],[],[])
+ * @method  Clan[]                      getTopClan([],[],[])
+ * @method  Clan[]                      getTopPlayer(string)
+ * @method  Clan[]                      getPopularClan([],[],[])
+ * @method  Player[]                    getPopularPlayer([],[],[])
+ * @method  Tournament[]                getPopularTournament([],[],[])
+ * @method  Deck[]                      getPopularDeck([],[],[])
+ * @method  Constants                   getConstant()
+ * @method  AuthStats                   getAuthStats()
+ * @method  UnknownObject               getVersion([],[],[])
+ * @method  Health                      getHealth()
+ * @method  Status                      getStatus([],[],[])
+ * @method  Endpoint[]                  getEndpoints()  *
  */
 
 class Api
@@ -45,11 +76,40 @@ class Api
     protected $client;
     protected $auth_token;
     protected $last_response;
-    protected static $endpoints = [];
     protected static $ping;
     protected static $last_ping;
-    protected $limit = 260;
-    protected $remaining = 260;
+    protected static $endpoints =
+        [
+            "/players?/:tag"=>Player::class,
+            "/players?/:tag/battles?"=>Battle::class,
+            "/players?/:tag/chests?"=>PlayerChest::class,
+            "/clans?/search"=>Clan::class,
+            "/clans?/tracking"=>Tracking::class,
+            "/clans?/:tag"=>Clan::class,
+            "/clans?/:tag/battles?"=>Battle::class,
+            "/clans?/:tag/war"=>ClanWar::class,
+            "/clans?/:tag/warlog"=>ClanWar::class,
+            "/clans?/:tag/history"=>History::class,
+            "/clans?/:tag/history/weekly"=>History::class,
+            "/clans?/:tag/tracking"=>Tracking::class,
+            "/clans?/:tag/track"=>UnknownObject::class,
+            "/tournaments?/open"=>Tournament::class,
+            "/tournaments?/known"=>Tournament::class,
+            "/tournaments?/search"=>Tournament::class,
+            "/tournaments?/:tag"=>Tournament::class,
+            "/top/clans?/:cc?"=>Clan::class,
+            "/top/players?/:cc?"=>Player::class,
+            "/popular/clans?"=>Clan::class,
+            "/popular/players?"=>Player::class,
+            "/popular/tournaments?"=>Tournament::class,
+            "/popular/decks?"=>Deck::class,
+            "/constants?"=>Constants::class,
+            "/auth/stats"=>AuthStats::class,
+            "/version"=>UnknownObject::class,
+            "/health"=>Health::class,
+            "/status"=>Status::class,
+            "/endpoints"=>Endpoint::class,
+        ];
 
     /**
      * The max lifetime cache
@@ -57,15 +117,19 @@ class Api
      */
     protected $max_cache_age=120;
 
-    public function __construct(string $auth_token=null, int $max_cache_age = 120, HttpClientInterface $httpClientHandler = null)
+    public function __construct(string $auth_token=null, int $max_cache_age = null, HttpClientInterface $httpClientHandler = null)
     {
         if (is_null($auth_token)) {
             throw new CRSDKException("Auth token is required, additional information and support: http://discord.me/cr_api", 1);
         }
-        $this->setAuthToken($auth_token);
-        $this->setMaxCacheAge($max_cache_age);
+        $this->setAuthToken($auth_token)
+			 ->setMaxCacheAge($max_cache_age?:120);
         CRVersion::checkVersion();
         $this->client = new CRClient($httpClientHandler);
+    }
+    public static function getEndpointsStatic()
+    {
+     return self::$endpoints;
     }
 
 
@@ -186,24 +250,24 @@ class Api
     }
 
     /**
-     * [getHealth description]
-     * @method getHealth
-     * @return Helath       [description]
-     */
+    * [getHealth description]
+    * @method getHealth
+    * @return Health       [description]
+    */
     public function getHealth()
     {
         $response = $this->post("/health");
-        return new Helath($response);
+        return new Health($response);
     }
     /**
-     * [getConstant description]
-     * @method getConstant
-     * @return Helath       [description]
-     */
+    * [getConstant description]
+    * @method getConstant
+    * @return Health       [description]
+    */
     public function getConstant()
     {
         $response = $this->post("/constant");
-        return new UnknownObject($response);
+        return new Constants($response);
     }
 
     /**
@@ -256,13 +320,15 @@ class Api
 
     /**
      * Return all the information about the given users tag
-     * @method getPlayerChests
+     * @method getPlayerChest
+     *
      * @param  array     $player          Array with the id of the profiles
      * @param  array             $keys            Array with the exact parameters to request
      * @param  array             $exclude         Array with the exact parameters to exclude in the request
-     * @return ChestCycle[]                   Array of ChestCycle Objects if given more than one profile, else return one ChestCycle Object
+     *
+     * @return PlayerChest[]                   Array of PlayerChest Objects if given more than one profile, else return one PlayerChest Object
      */
-    public function getPlayerChests(array $player, array $keys = [], array $exclude = [])
+    public function getPlayerChest(array $player, array $keys = [], array $exclude = [])
     {
         $players = [];
         $querys = [];
@@ -276,23 +342,23 @@ class Api
         $response = $this->post("/player/:tag/chest", $player, $querys);
 
         if (CRUtils::isAssoc($response)) {
-            return new ChestCycle($response);
+            return new PlayerChest($response);
         }
 
         foreach ($response as $p) {
-            $players[] = new ChestCycle($p);
+            $players[] = new PlayerChest($p);
         }
         return $players;
     }
     /**
      * Return all the battles the given users tag
-     * @method getPlayerBattles
+     * @method getPlayerBattle
      * @param  array     $player          Array with the id of the profiles
      * @param  array     $keys            Array with the exact parameters to request
      * @param  array     $exclude         Array with the exact parameters to exclude in the request
      * @return Battle[]                   Array of Battle Objects if given more than one profile, else return one Battle Object
      */
-    public function getPlayerBattles(array $player, array $keys = [], array $exclude = [])
+    public function getPlayerBattle(array $player, array $keys = [], array $exclude = [])
     {
         $players = [];
         $querys = [];
@@ -346,15 +412,15 @@ class Api
     }
 
     /**
-     * Return all the information about the given clan tag
-     * @method getClanBattles
-     * @param  array          $clan            Array with the tag of the clans
-     * @param  array          $keys            Array with the exact parameters to request
-     * @param  array          $exclude         Array with the exact parameters to exclude in the request
-     * @param  string         $type            Type of clan battles to filter ('all', 'war' or 'clanMate')
-     * @return Clan[]||Clan                    Array of Clan Objects if given more than one profile, else return one Clan Object
-     */
-    public function getClanBattles(array $clan, array $keys = [], array $exclude = [],string $type = "")
+    * Return all the information about the given clan tag
+    * @method getClanBattles
+    * @param  array          $clan            Array with the tag of the clans
+    * @param  array          $keys            Array with the exact parameters to request
+    * @param  array          $exclude         Array with the exact parameters to exclude in the request
+    * @param  string         $type            Type of clan battles to filter ('all', 'war' or 'clanMate')
+    * @return Clan[]||Clan                    Array of Clan Objects if given more than one profile, else return one Clan Object
+    */
+    public function getClanBattle(array $clan, array $keys = [], array $exclude = [],string $type = "")
     {
         $clans = [];
         $querys = [];
@@ -444,14 +510,14 @@ class Api
 
     /**
      * Search clans by their attributes
-     * @method clanSearch
+     * @method getClanSearch
      * @param  string           $name                 (Optional)Clan name text search.
      * @param  int              $score                (Optional) Minimum clan score.
      * @param  int              $minMembers           (Optional) Minimum number of members. 0-50
      * @param  int              $maxMembers           (Optional) Maximum number of members. 0-50
-     * @return ClanSearch[]     $clanSearch           Returns an array of Clan objects that match the search parameters
+     * @return Clan[]                                 Returns an array of Clan objects that match the search parameters
      */
-    public function clanSearch(string $name = "", int $score = 0, int $minMembers = 0, int $maxMembers = 50)
+    public function getClanSearch(string $name = "", int $score = 0, int $minMembers = 0, int $maxMembers = 50)
     {
         $clanSearch = [];
         if (empty(func_get_args())) {
@@ -476,18 +542,18 @@ class Api
         }
         $response = $this->post("/clan/search", [], $query);
         foreach ($response as $cs) {
-            $clanSearch[] = new ClanSearch($cs);
+            $clanSearch[] = new Clan($cs);
         }
         return $clanSearch;
     }
 
     /**
      * Return all information about the top players
-     * @method getTopPlayers
+     * @method getTopPlayer
      * @param  string||null  $location  Two-letter code of the location
      * @return array              Array with key of respectives top type ("players" or "clans") and with their values an array with "lastUpdate" of the top list and the respective array with the respective objects type ("players" = array CR\Objects\Player)
      */
-    public function getTopPlayers(string $location = null)
+    public function getTopPlayer(string $location = null)
     {
         $tops = [];
         $response = $this->post("/top/player/:cc", [$location]);
@@ -497,21 +563,31 @@ class Api
         return $tops;
     }
 
+    public function searchEndpoint(array $endpoint_array){
+        $endpoints = collect(self::$endpoints);
+        $endpoints = $endpoints->filter( function ($item,$value) use ($endpoint_array){
+            $req = count($endpoint_array);
+            $found = 0;
+            $value_a = explode("/", $value);
+            foreach ($endpoint_array as $end) {
+                $found += in_array($end."s?", $value_a) || in_array($end, $value_a) ? 1 : 0;
+            }
+            return $req == $found;
+        });
+        if (!$endpoints->count()) return false;
+        $endpoints = $endpoints->all();
+        return [current($endpoints), str_replace("s?", "", key($endpoints))];
+    }
+
+
 
     public function __call($method, $arguments)
     {
         $action = substr($method, 0, 3);
-        if ($action === 'get') {
-            $class_name = studly_case(substr($method, 3));
-            $class = 'CR\Objects\\'.$class_name;
-            $response = $this->post($class_name, $arguments[0] ?: []);
-
-            if (class_exists($class)) {
-                return new $class($response);
-            }
-
-            return new UnknownObject($response);
-        }
+        $endpoint_array = explode("_", snake_case(substr($method, 3)));
+        list($class,$endpoint) = $this->searchEndpoint($endpoint_array) ?: [UnknownObject::class,implode("/", $endpoint_array)];
+        $response = $this->post($endpoint,...$arguments);
+        return new $class($response);
     }
 
     /**

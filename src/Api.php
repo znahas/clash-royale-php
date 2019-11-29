@@ -418,7 +418,7 @@ class Api
     * @param  array          $keys            Array with the exact parameters to request
     * @param  array          $exclude         Array with the exact parameters to exclude in the request
     * @param  string         $type            Type of clan battles to filter ('all', 'war' or 'clanMate')
-    * @return Clan[]||Clan                    Array of Clan Objects if given more than one profile, else return one Clan Object
+    * @return Battle[]||Battle                    Array of Clan Objects if given more than one profile, else return one Clan Object
     */
     public function getClanBattle(array $clan, array $keys = [], array $exclude = [],string $type = "")
     {

@@ -50,8 +50,11 @@ class CRClient
     public function __construct(HttpClientInterface $httpClientHandler = null)
     {
       if (!$httpClientHandler) {
+          //todo: Adding this to prevent from hanging
         $client = new Client([
-          'base_uri' => $this->getBaseUrl()
+          'base_uri' => $this->getBaseUrl(),
+          CURLOPT_FORBID_REUSE  => true,
+          CURLOPT_FRESH_CONNECT => true,
         ]);
         $httpClientHandler = new GuzzleHttpClient($client);
       }

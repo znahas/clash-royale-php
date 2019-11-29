@@ -19,7 +19,8 @@
     "league/event": "^2.1",
     "vlucas/phpdotenv": "^2.4",
     "kint-php/kint": "^2.0",
-    "cebe/markdown": "~1.2.0"
+    "cebe/markdown": "~1.2.0",
+    "ext-curl": "*"
   },
   "autoload":{
     "psr-4":{

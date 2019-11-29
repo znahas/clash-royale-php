@@ -38,6 +38,7 @@ class CRResponse
     403 => 'Forbiden',
     404 => 'Not Found -- The specified player / clan cannot be found. Could be invalid tags',
     500 => 'Internal Server Error -- We had a problem with our server. Try again later.',
+    502 => "Service Unavailable -- We're temporarily offline for maintenance. Please try again later.",
     503 => "Service Unavailable -- We're temporarily offline for maintenance. Please try again later.",
     521 => "Service Unavailable -- Web server is down",
     ];

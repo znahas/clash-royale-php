@@ -35,6 +35,7 @@ class CRResponse
   private static $phrases = [
     400 => 'Bad Request -- Your request sucks.',
     401 => 'Unauthorized -- No authentication was provided, or key invalid.',
+    403 => 'Forbiden',
     404 => 'Not Found -- The specified player / clan cannot be found. Could be invalid tags',
     500 => 'Internal Server Error -- We had a problem with our server. Try again later.',
     503 => "Service Unavailable -- We're temporarily offline for maintenance. Please try again later.",

@@ -608,7 +608,11 @@ class Api
             return !is_null($var);
         });
 
-        $response = $this->checkCache($endpoint, $params, $querys);
+        $response = array();
+
+        if ($saveCache) {
+            $response = $this->checkCache($endpoint, $params, $querys);
+        }
 
         if ((empty($response) && empty($params)) || !empty($params)) {
 

@@ -593,14 +593,14 @@ class Api
     /**
      * [post description]
      * @method post
-     * @param  string $endpoint [description]
-     * @param  array $params [description]
-     * @param  array $querys [description]
+     * @param string $endpoint [description]
+     * @param array $params [description]
+     * @param array $querys [description]
      * @param bool $saveCache
      * @return CRResponse [description]
      * @throws CRResponseException
+     * @throws CRSDKException
      */
-
     protected function postNew($endpoint, array $params = [], array $querys = [], $saveCache = true)
     {
 
@@ -638,11 +638,17 @@ class Api
             if (isset($res->getHeaders()['x-ratelimit-remaining'])) {
                 $this->remaining = $res->getHeaders()['x-ratelimit-remaining'][0];
             }
-            $this->saveCache($res->getDecodedBody(), $response);
+
+            if ($saveCache) {
+                $this->saveCache($res->getDecodedBody(), $response);
+            } else {
+                foreach ($res->getDecodedBody() as $key => $resp) {
+                    $response[] = $resp;
+                }
+            }
         }
 
         return (count($response) === 1) ? $response[0] : $response;
-
     }
 
 
